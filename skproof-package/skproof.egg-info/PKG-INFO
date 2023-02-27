@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: skproof
+Version: 0.1.0
+Summary: SciKit learn compatible library for generating ZK proofs of execution
+Home-page: https://github.com/0x3327/skproof.git
+Author: Aleksandar Veljković, 3327.io
+Author-email: aleksandar.veljkovic@mvpworkshop.co
+License: BSD 2-clause
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 3.10
+
+UNKNOWN
+

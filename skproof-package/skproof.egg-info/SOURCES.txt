@@ -1,0 +1,11 @@
+setup.py
+skproof/__init__.py
+skproof.egg-info/PKG-INFO
+skproof.egg-info/SOURCES.txt
+skproof.egg-info/dependency_links.txt
+skproof.egg-info/requires.txt
+skproof.egg-info/top_level.txt
+skproof/float_num/FloatNum.py
+skproof/float_num/__init__.py
+skproof/mlp/MLPClassifierProver.py
+skproof/mlp/__init__.py
