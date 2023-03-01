@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='skproof',
-    version='0.1.0',    
+    version='0.1.1',    
     description='SciKit learn compatible library for generating ZK proofs of execution',
     url='https://github.com/0x3327/skproof.git',
     author='Aleksandar Veljković, 3327.io',

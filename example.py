@@ -22,7 +22,7 @@ mlpcp = MLPClassifierProver(
     mlp,
     'src/main.nr',
     'Prover.toml',
-    '../zkfloat/lib.nr',
+    '../zkfloat/zkfloat.nr',
     7
 )
 
