@@ -17,7 +17,7 @@ print('Training MLPClassifier...')
 mlp = MLPClassifier((2,3), activation='relu', max_iter=2000)
 mlp.fit(X, y)
 
-# Generate proof for thr first row
+# Generate proof for the first row
 mlpcp = MLPClassifierProver(
     mlp,
     'src/main.nr',
