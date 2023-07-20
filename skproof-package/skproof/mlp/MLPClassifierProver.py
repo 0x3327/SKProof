@@ -134,9 +134,9 @@ class MLPClassifierProver:
 
         for out in outputs:
             main_args_arr.append(f'\ty_{y_num} : pub [Field; 3]')
-            constrains += f'\tconstrain {out}.sign == y_{y_num}[0];\n'
-            constrains += f'\tconstrain {out}.mantissa == y_{y_num}[1];\n'
-            constrains += f'\tconstrain {out}.exponent == y_{y_num}[2];\n'
+            constrains += f'\tassert({out}.sign == y_{y_num}[0]);\n'
+            constrains += f'\tassert({out}.mantissa == y_{y_num}[1]);\n'
+            constrains += f'\tassert({out}.exponent == y_{y_num}[2]);\n'
             y_num += 1
 
         main_fn += ',\n'.join(main_args_arr)
@@ -247,8 +247,7 @@ class MLPClassifierProver:
 
     def import_lib(self):
         lib_data = self.float_num_lib.read()
-        lib_data = lib_data.replace('maxValue : Field = 100000;', f'maxValue : Field = {10 ** self.precision};')
-        lib_data = lib_data.replace('maxLogValue : Field = 5;', f'maxLogValue : Field = {self.precision};')
+        lib_data = lib_data.replace('global precision : Field = 7;', f'global precision : Field = {self.precision};')
         self.circuit_output.write(lib_data)
         self.circuit_output.write('\n')
 
