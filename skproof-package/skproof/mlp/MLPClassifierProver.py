@@ -248,6 +248,7 @@ class MLPClassifierProver:
     def import_lib(self):
         lib_data = self.float_num_lib.read()
         lib_data = lib_data.replace('global precision : Field = 7;', f'global precision : Field = {self.precision};')
+        lib_data = lib_data.replace('for i in 0..7', f'for i in 0..{self.precision}')
         self.circuit_output.write(lib_data)
         self.circuit_output.write('\n')
 
