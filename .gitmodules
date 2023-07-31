@@ -1,0 +1,3 @@
+[submodule "ZKFloat"]
+	path = ZKFloat
+	url = git@github.com:0x3327/ZKFloat.git
