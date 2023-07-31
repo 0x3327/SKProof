@@ -14,8 +14,8 @@ The first step is ML model training, where the model parameters are determined. 
 
 ## Prerequisites
 The library uses [Noir](https://noir-lang.org/) code to generate proofs for the [scikit-learn](https://scikit-learn.org/) models, so it is a requirement that you have installed:
-- scikit-learn library; install using pip with command `pip install sklearn`
-- noir library; Installation instructions can be found [here](https://noir-lang.org/getting_started/nargo/installation.html)
+- scikit-learn library; install using pip with command `pip install scikit-learn`
+- noir library; Installation instructions can be found [here](https://noir-lang.org/getting_started/nargo_installation)
 
 ## Installation
 Installing skproof package is done using pip with command `pip install skproof`
