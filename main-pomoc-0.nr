@@ -1,4 +1,3 @@
-use dep::std;
 // Struct representing float numbers using sign, mantissa and exponent.
 // When Noir language gets the update to support signed integers, the sign field will be removed
 struct Float {
@@ -178,60 +177,40 @@ fn subFloats(x : Float, y : Float) -> Float {
 }
 
 fn main(
-	x_1 : [Field; 3],
-	x_2 : [Field; 3],
-	x_3 : [Field; 3],
+	x_1 : pub [Field; 3],
+	x_2 : pub [Field; 3],
+	x_3 : pub [Field; 3],
+	x_4 : pub [Field; 3],
 	y_1 : [Field; 3],
-	y_2 : [Field; 3],
-	y_3 : [Field; 3]
-	// hash_input : pub Field,
-	// hash_output : pub Field
+	y_2 : [Field; 3]
 ) {
-	let input_hash = std::hash::poseidon::bn254::hash_9([x_1[0], x_1[1], x_1[2], x_2[0], x_2[1], x_2[2], x_3[0], x_3[1], x_3[2]]);
-	let output_hash = std::hash::poseidon::bn254::hash_9([y_1[0], y_1[1], y_2[2], y_2[0], y_2[1], y_2[2], y_3[0], y_3[1], y_3[2]]);
-	let mut X_2_0 = Float{ sign: x_1[0], mantissa: x_1[1], exponent: x_1[2] };
-	let mut X_2_1 = Float{ sign: x_2[0], mantissa: x_2[1], exponent: x_2[2] };
-	let mut X_2_2 = Float{ sign: x_3[0], mantissa: x_3[1], exponent: x_3[2] };
-	let A_3_0_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 851, exponent: 86 });
-	let A_3_0_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 0, exponent: 100 });
-	let A_3_0_2 = mulFloats(X_2_2, Float {sign: 1, mantissa: 1567518, exponent: 94 });
-	let B_2_0_0 = addFloats(A_3_0_0, A_3_0_1);
-	let B_2_0_1 = addFloats(B_2_0_0, A_3_0_2);
-	let WXb_2_0 = addFloats(B_2_0_1, Float {sign: 0, mantissa: 1702505, exponent: 93 });
-	let O_3_0 = relu(WXb_2_0);
-	let A_3_1_0 = mulFloats(X_2_0, Float {sign: 1, mantissa: 1105853, exponent: 92 });
-	let A_3_1_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 1134434, exponent: 89 });
-	let A_3_1_2 = mulFloats(X_2_2, Float {sign: 1, mantissa: 1405871, exponent: 94 });
-	let B_2_1_0 = addFloats(A_3_1_0, A_3_1_1);
-	let B_2_1_1 = addFloats(B_2_1_0, A_3_1_2);
-	let WXb_2_1 = addFloats(B_2_1_1, Float {sign: 0, mantissa: 2262341, exponent: 93 });
-	let O_3_1 = relu(WXb_2_1);
-	let A_3_2_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 4680363, exponent: 92 });
-	let A_3_2_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 5185280, exponent: 92 });
-	let A_3_2_2 = mulFloats(X_2_2, Float {sign: 0, mantissa: 1279799, exponent: 94 });
-	let B_2_2_0 = addFloats(A_3_2_0, A_3_2_1);
-	let B_2_2_1 = addFloats(B_2_2_0, A_3_2_2);
-	let WXb_2_2 = addFloats(B_2_2_1, Float {sign: 1, mantissa: 1587725, exponent: 94 });
-	let O_3_2 = relu(WXb_2_2);
+	let mut X_0_0 = Float{ sign: x_1[0], mantissa: x_1[1], exponent: x_1[2] };
+	let mut X_0_1 = Float{ sign: x_2[0], mantissa: x_2[1], exponent: x_2[2] };
+	let mut X_0_2 = Float{ sign: x_3[0], mantissa: x_3[1], exponent: x_3[2] };
+	let mut X_0_3 = Float{ sign: x_4[0], mantissa: x_4[1], exponent: x_4[2] };
+	let A_1_0_0 = mulFloats(X_0_0, Float {sign: 0, mantissa: 8863036, exponent: 93 });
+	let A_1_0_1 = mulFloats(X_0_1, Float {sign: 0, mantissa: 1158275, exponent: 94 });
+	let A_1_0_2 = mulFloats(X_0_2, Float {sign: 1, mantissa: 1181691, exponent: 94 });
+	let A_1_0_3 = mulFloats(X_0_3, Float {sign: 1, mantissa: 1557703, exponent: 94 });
+	let B_0_0_0 = addFloats(A_1_0_0, A_1_0_1);
+	let B_0_0_1 = addFloats(B_0_0_0, A_1_0_2);
+	let B_0_0_2 = addFloats(B_0_0_1, A_1_0_3);
+	let WXb_0_0 = addFloats(B_0_0_2, Float {sign: 0, mantissa: 8211011, exponent: 93 });
+	let X_1_0 = relu(WXb_0_0);
+	let A_1_1_0 = mulFloats(X_0_0, Float {sign: 0, mantissa: 5038648, exponent: 93 });
+	let A_1_1_1 = mulFloats(X_0_1, Float {sign: 0, mantissa: 8035960, exponent: 92 });
+	let A_1_1_2 = mulFloats(X_0_2, Float {sign: 0, mantissa: 9639570, exponent: 93 });
+	let A_1_1_3 = mulFloats(X_0_3, Float {sign: 1, mantissa: 6365030, exponent: 93 });
+	let B_0_1_0 = addFloats(A_1_1_0, A_1_1_1);
+	let B_0_1_1 = addFloats(B_0_1_0, A_1_1_2);
+	let B_0_1_2 = addFloats(B_0_1_1, A_1_1_3);
+	let WXb_0_1 = addFloats(B_0_1_2, Float {sign: 1, mantissa: 3749267, exponent: 93 });
+	let X_1_1 = relu(WXb_0_1);
 
-    std::println(x_1);
-    std::println(x_2);
-    std::println(x_3);
-    std::println(input_hash);
-    std::println(y_1);
-    std::println(y_2);
-    std::println(y_3);
-    std::println(output_hash);
-
-	// assert(input_hash == hash_input);
-	// assert(output_hash == hash_output);
-	assert(O_3_0.sign == y_1[0]);
-	assert(O_3_0.mantissa == y_1[1]);
-	assert(O_3_0.exponent == y_1[2]);
-	assert(O_3_1.sign == y_2[0]);
-	assert(O_3_1.mantissa == y_2[1]);
-	assert(O_3_1.exponent == y_2[2]);
-	assert(O_3_2.sign == y_3[0]);
-	assert(O_3_2.mantissa == y_3[1]);
-	assert(O_3_2.exponent == y_3[2]);
+	assert(X_1_0.sign == y_1[0]);
+	assert(X_1_0.mantissa == y_1[1]);
+	assert(X_1_0.exponent == y_1[2]);
+	assert(X_1_1.sign == y_2[0]);
+	assert(X_1_1.mantissa == y_2[1]);
+	assert(X_1_1.exponent == y_2[2]);
 }

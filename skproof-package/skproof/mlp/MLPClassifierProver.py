@@ -75,7 +75,7 @@ class MLPClassifierProver:
     def generate_ac_statement(self, res, value, act_func):
         return f'let {res} = {act_func}({value});'
 
-    def generate_statements(self, expressions, inputs, outputs):
+    def generate_statements(self, expressions, inputs, outputs, idx):
         statements = []
 
         for e in expressions:
@@ -110,6 +110,8 @@ class MLPClassifierProver:
 
         declarations = ''
 
+        #print("inputs", inputs)
+
         x_num = 1
         for input in inputs:
             declarations += f'\tlet mut {input} = Float' + '{ ' + \
@@ -126,14 +128,18 @@ class MLPClassifierProver:
         main_args_arr = []
         main_fn = 'fn main(\n'
 
+        # dodati hash ulaza da se uporedi u kolu
+
         x_num = 1
         for input in inputs:
-            main_args_arr.append(f'\tx_{x_num} : pub [Field; 3]')
+            main_args_arr.append(f'\tx_{x_num} : [Field; 3]')
             x_num += 1
 
+        #print("outputs gs", outputs)
 
+        #dodati hash izlaza da se uporedi u kolu
         for out in outputs:
-            main_args_arr.append(f'\ty_{y_num} : pub [Field; 3]')
+            main_args_arr.append(f'\ty_{y_num} : [Field; 3]')
             constrains += f'\tassert({out}.sign == y_{y_num}[0]);\n'
             constrains += f'\tassert({out}.mantissa == y_{y_num}[1]);\n'
             constrains += f'\tassert({out}.exponent == y_{y_num}[2]);\n'
@@ -149,13 +155,15 @@ class MLPClassifierProver:
         self.circuit_output.write(constrains)
         self.circuit_output.write('}\n')
 
-    def generate_expressions(self):
-        num_layers = len(self.clf.coefs_)
+    def generate_expressions(self, idx):
+        num_layers = 1
         expressions = []
 
         for l in range(num_layers):
-            layer = self.clf.coefs_[l]
-            ints = self.clf.intercepts_[l]
+            layer = self.clf.coefs_[idx]
+            ints = self.clf.intercepts_[idx]
+
+            #print("layer shape", layer.shape[1])
 
             for j in range(layer.shape[1]):
                 coefs = layer[:, j]
@@ -164,95 +172,136 @@ class MLPClassifierProver:
                 # Extract weight multiplications
                 for i in range(coefs.shape[0]):
                     new_expressions.append(
-                        ['MUL', f'A_{l+1}_{j}_{i}', f'X_{l}_{i}', self.quant(coefs[i])])
+                        ['MUL', f'A_{idx+1}_{j}_{i}', f'X_{idx}_{i}', self.quant(coefs[i])])
 
                 # Extract sumations
                 partials = []
                 for poly_i in range(1, len(new_expressions)):
                     if poly_i == 1:
-                        sum_arg = ['SUM', f'B_{l}_{j}_{poly_i-1}',
+                        sum_arg = ['SUM', f'B_{idx}_{j}_{poly_i-1}',
                                    new_expressions[0][1], new_expressions[1][1]]
                     else:
-                        sum_arg = ['SUM', f'B_{l}_{j}_{poly_i-1}',
-                                   f'B_{l}_{j}_{poly_i-2}', new_expressions[poly_i][1]]
+                        sum_arg = ['SUM', f'B_{idx}_{j}_{poly_i-1}',
+                                   f'B_{idx}_{j}_{poly_i-2}', new_expressions[poly_i][1]]
                     partials.append(sum_arg)
 
                 partials.append(
-                    ['SUM', f'WXb_{l}_{j}', f'B_{l}_{j}_{len(new_expressions)-2}', self.quant(ints[j])])
+                    ['SUM', f'WXb_{idx}_{j}', f'B_{idx}_{j}_{len(new_expressions)-2}', self.quant(ints[j])])
 
                 letter = 'X'
-                if l == num_layers - 1:
+                if idx == (len(self.clf.coefs_) - 1):
+                    # print("idx", idx)
                     letter = 'O'
 
                 # Add ReLU activation function statement
                 activations = [
-                    ['RELU', f'{letter}_{l+1}_{j}', f'WXb_{l}_{j}']
+                    ['RELU', f'{letter}_{idx+1}_{j}', f'WXb_{idx}_{j}']
                 ]
 
                 expressions += new_expressions
                 expressions += partials
                 expressions += activations
 
-        inputs = [f'X_0_{i}' for i in range(self.clf.coefs_[0].shape[0])]
-        outputs = [f'O_{len(self.clf.coefs_)}_{i}' for i in range(
-            self.clf.coefs_[-1].shape[1])]
+        inputs = [f'X_{idx}_{i}' for i in range(self.clf.coefs_[idx].shape[0])]
+        letter = 'X'
+        if idx == (len(self.clf.coefs_) - 1):
+            letter = 'O'
+        outputs = [f'{letter}_{idx+1}_{i}' for i in range(
+            self.clf.coefs_[idx].shape[1])]
 
         return (expressions, inputs, outputs)
 
-    def simulate_ann(self, expressions, inputs, outputs, data):
+    def simulate_ann(self, expressions, inputs, outputs, data, idx):
         y_pred = []
-        for row in data:
-            node_values = {}
+        weights = self.clf.coefs_[idx]
+        bias = self.clf.intercepts_[idx]
 
-            # Init inputs
-            for i in range(len(inputs)):
-                input_node = inputs[i]
-                node_values[input_node] = self.quant(row[i])
+        # for row in data:
+        node_values = {}
+        node_values_py = {}
 
-            for poly in expressions:
-                second_val = None
+        # Init inputs
+        for i in range(len(inputs)):
+            input_node = inputs[i]
+            node_values[input_node] = self.quant(data[i])
+            node_values_py[input_node] = data[i]
+        
+        # print("nr", node_values)
+        # print("py", node_values_py)
 
-                if len(poly) == 4:
-                    if isinstance(poly[3], FloatNum):
-                        second_val = poly[3]
-                    else:
-                        second_val = node_values[poly[3]]
+        cnt_w_n = 0
+        cnt_w_p = 0
+        cnt_b_n = 0
+        for poly in expressions:
+            second_val = None
+            second_val_py = 0
 
-                if poly[0] == 'SUM':
-                    node_values[poly[1]] = node_values[poly[2]] + second_val
-                    if self.verbose:
-                        self.circuit_output.write(
-                            f"// {poly[1]} = {node_values[poly[2]]} + {second_val} = {node_values[poly[2]] + second_val}\n")
-                elif poly[0] == 'MUL':
-                    # Verbose logs in Noir language comments
-                    if self.verbose:
-                        self.circuit_output.write(
-                            f"// {poly[1]} = {node_values[poly[2]]} * {second_val} = {node_values[poly[2]] * second_val}\n")
-                    node_values[poly[1]] = node_values[poly[2]] * second_val
-                elif poly[0] == 'RELU':
-                    if node_values[poly[2]].mantissa < 0:
-                        node_values[poly[1]] = FloatNum(
-                            0, 0, self.precision, self.exp_pad)
-                    else:
-                        node_values[poly[1]] = node_values[poly[2]]
+            if len(poly) == 4:
+                if isinstance(poly[3], FloatNum):
+                    second_val = poly[3]
+                    if poly[0] == 'MUL':
+                        second_val_py = weights[cnt_w_p][cnt_w_n]
+                        cnt_w_p += 1
+                    elif poly[0] == 'SUM':
+                        second_val_py = bias[cnt_b_n]
+                        cnt_b_n += 1
+                        cnt_w_n += 1
+                        cnt_w_p = 0
+                else:
+                    second_val = node_values[poly[3]]
+                    second_val_py = node_values_py[poly[3]]
 
-            for key, value in node_values.items():
-                if self.verbose:
-                    self.circuit_output.write(f"// {key} => {value}\n")
+            if poly[0] == 'SUM':
+                node_values[poly[1]] = node_values[poly[2]] + second_val
+                node_values_py[poly[1]] = node_values_py[poly[2]] + second_val_py
+                # if self.verbose:
+                #     self.circuit_output.write(
+                #         f"// {poly[1]} = {node_values[poly[2]]} + {second_val} = {node_values[poly[2]] + second_val}\n")
+                #     self.circuit_output.write(
+                #         f"// {poly[1]}_py = {node_values_py[poly[2]]} + {second_val_py} = {node_values_py[poly[1]]}\n")
+            elif poly[0] == 'MUL':
+                # Verbose logs in Noir language comments
+                # if self.verbose:
+                #     self.circuit_output.write(
+                #         f"// {poly[1]} = {node_values[poly[2]]} * {second_val} = {node_values[poly[2]] * second_val}\n")
+                #     self.circuit_output.write(
+                #         f"// {poly[1]}_py = {node_values_py[poly[2]]} * {second_val_py} = {node_values_py[poly[2]] * second_val_py}\n")
+                node_values[poly[1]] = node_values[poly[2]] * second_val
+                node_values_py[poly[1]] = node_values_py[poly[2]] * second_val_py
+            elif poly[0] == 'RELU':
+                if node_values[poly[2]].mantissa < 0:
+                    node_values[poly[1]] = FloatNum(
+                        0, 0, self.precision, self.exp_pad)
+                    node_values_py[poly[1]] = 0
+                else:
+                    node_values[poly[1]] = node_values[poly[2]]
+                    node_values_py[poly[1]] = node_values_py[poly[2]]
+            
 
-            label = np.argmax([node_values[i] for i in outputs])
-            y_pred.append(label)
+        # for key, value in node_values.items():
+        #     if self.sverbose:
+        #         self.circuit_output.write(f"// {key} => {value}\n")
+        
+        # for key, value in node_values_py.items():
+        #     if self.verbose:
+        #         self.circuit_output.write(f"// {key}_py => {value}\n")
 
-        return y_pred, [node_values[p] for p in inputs], [node_values[o] for o in outputs]
+        label = np.argmax([node_values[i] for i in outputs])
+        y_pred.append(label)
+
+        return y_pred, [node_values[p] for p in inputs], [node_values[o] for o in outputs], [node_values_py[o] for o in outputs]
 
     def import_lib(self):
         lib_data = self.float_num_lib.read()
         lib_data = lib_data.replace('global precision : Field = 7;', f'global precision : Field = {self.precision};')
         lib_data = lib_data.replace('for i in 0..7', f'for i in 0..{self.precision}')
+        self.circuit_output = open(self.circuit_output_path, 'w')
         self.circuit_output.write(lib_data)
         self.circuit_output.write('\n')
+        self.float_num_lib.seek(0)
 
-    def generate_circuit(self, X):
+    def generate_circuit(self, X, idx):
+        #print("X", X, len(X))
         if self.verbose:
             print('Generating circuit...')
 
@@ -260,23 +309,29 @@ class MLPClassifierProver:
         self.import_lib()
 
         # Generate expressions from MLPClassifier model
-        expressions, inputs, outputs = self.generate_expressions()
+        expressions, inputs, outputs = self.generate_expressions(idx)
 
         # Generate Noir language statements
-        self.generate_statements(expressions, inputs, outputs)
+        self.generate_statements(expressions, inputs, outputs, idx)
 
         # Generate prover file
-        prover_input_file = open('Prover.toml', 'w')
-        for i in range(X.shape[1]):
-            value = X[0, i].ravel()[0]
+        prover_input_file = open(f'Prover.toml', 'w')
+        for i in range(len(X)):
+            value = X[i]
             float_value = self.quant(value).get_prover_input()
             prover_input_file.write(f'x_{i+1} = {float_value}\n')
 
-        _, _, output_values = self.simulate_ann(
+        # print("expressions", expressions)
+        # print("inputs", inputs)
+        # print("outputs", outputs)
+        # print("X", X)
+
+        _, _, output_values, output_values_py = self.simulate_ann(
             expressions,
             inputs,
             outputs,
-            X
+            X,
+            idx
         )
 
         for i in range(len(output_values)):
@@ -289,13 +344,17 @@ class MLPClassifierProver:
         if self.verbose:
             print(f'Circuit generated successfuly in {self.circuit_output_path}')
 
-    def prove(self, X):
-        self.generate_circuit(X)
+        return output_values_py
+
+    def prove(self, X, idx):
+        output_values = self.generate_circuit(X, idx)
         path = self.circuit_output_path.split('/')[:-2]
         
         if self.verbose:
             print('Generating proof, this may take a while...')
         if len(path) != 0:
             os.system(f'cd {"/".join(path)}')
-        os.system("nargo prove mlp-proof")
+        os.system(f'nargo prove mlp-proof-{idx}')
         print(f'Done!')
+        
+        return output_values

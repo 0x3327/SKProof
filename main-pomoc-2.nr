@@ -1,4 +1,3 @@
-use dep::std;
 // Struct representing float numbers using sign, mantissa and exponent.
 // When Noir language gets the update to support signed integers, the sign field will be removed
 struct Float {
@@ -181,50 +180,35 @@ fn main(
 	x_1 : [Field; 3],
 	x_2 : [Field; 3],
 	x_3 : [Field; 3],
-	y_1 : [Field; 3],
-	y_2 : [Field; 3],
-	y_3 : [Field; 3]
-	// hash_input : pub Field,
-	// hash_output : pub Field
+	y_1 : pub [Field; 3],
+	y_2 : pub [Field; 3],
+	y_3 : pub [Field; 3]
 ) {
-	let input_hash = std::hash::poseidon::bn254::hash_9([x_1[0], x_1[1], x_1[2], x_2[0], x_2[1], x_2[2], x_3[0], x_3[1], x_3[2]]);
-	let output_hash = std::hash::poseidon::bn254::hash_9([y_1[0], y_1[1], y_2[2], y_2[0], y_2[1], y_2[2], y_3[0], y_3[1], y_3[2]]);
 	let mut X_2_0 = Float{ sign: x_1[0], mantissa: x_1[1], exponent: x_1[2] };
 	let mut X_2_1 = Float{ sign: x_2[0], mantissa: x_2[1], exponent: x_2[2] };
 	let mut X_2_2 = Float{ sign: x_3[0], mantissa: x_3[1], exponent: x_3[2] };
-	let A_3_0_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 851, exponent: 86 });
-	let A_3_0_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 0, exponent: 100 });
-	let A_3_0_2 = mulFloats(X_2_2, Float {sign: 1, mantissa: 1567518, exponent: 94 });
+	let A_3_0_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 1326214, exponent: 94 });
+	let A_3_0_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 2819566, exponent: 93 });
+	let A_3_0_2 = mulFloats(X_2_2, Float {sign: 1, mantissa: 1378662, exponent: 94 });
 	let B_2_0_0 = addFloats(A_3_0_0, A_3_0_1);
 	let B_2_0_1 = addFloats(B_2_0_0, A_3_0_2);
-	let WXb_2_0 = addFloats(B_2_0_1, Float {sign: 0, mantissa: 1702505, exponent: 93 });
+	let WXb_2_0 = addFloats(B_2_0_1, Float {sign: 1, mantissa: 4369334, exponent: 93 });
 	let O_3_0 = relu(WXb_2_0);
-	let A_3_1_0 = mulFloats(X_2_0, Float {sign: 1, mantissa: 1105853, exponent: 92 });
-	let A_3_1_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 1134434, exponent: 89 });
-	let A_3_1_2 = mulFloats(X_2_2, Float {sign: 1, mantissa: 1405871, exponent: 94 });
+	let A_3_1_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 5289555, exponent: 93 });
+	let A_3_1_1 = mulFloats(X_2_1, Float {sign: 1, mantissa: 4317510, exponent: 93 });
+	let A_3_1_2 = mulFloats(X_2_2, Float {sign: 0, mantissa: 4703769, exponent: 93 });
 	let B_2_1_0 = addFloats(A_3_1_0, A_3_1_1);
 	let B_2_1_1 = addFloats(B_2_1_0, A_3_1_2);
-	let WXb_2_1 = addFloats(B_2_1_1, Float {sign: 0, mantissa: 2262341, exponent: 93 });
+	let WXb_2_1 = addFloats(B_2_1_1, Float {sign: 1, mantissa: 2505612, exponent: 93 });
 	let O_3_1 = relu(WXb_2_1);
-	let A_3_2_0 = mulFloats(X_2_0, Float {sign: 0, mantissa: 4680363, exponent: 92 });
-	let A_3_2_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 5185280, exponent: 92 });
-	let A_3_2_2 = mulFloats(X_2_2, Float {sign: 0, mantissa: 1279799, exponent: 94 });
+	let A_3_2_0 = mulFloats(X_2_0, Float {sign: 1, mantissa: 1375061, exponent: 94 });
+	let A_3_2_1 = mulFloats(X_2_1, Float {sign: 0, mantissa: 1259951, exponent: 94 });
+	let A_3_2_2 = mulFloats(X_2_2, Float {sign: 0, mantissa: 1108433, exponent: 94 });
 	let B_2_2_0 = addFloats(A_3_2_0, A_3_2_1);
 	let B_2_2_1 = addFloats(B_2_2_0, A_3_2_2);
-	let WXb_2_2 = addFloats(B_2_2_1, Float {sign: 1, mantissa: 1587725, exponent: 94 });
+	let WXb_2_2 = addFloats(B_2_2_1, Float {sign: 1, mantissa: 1913662, exponent: 93 });
 	let O_3_2 = relu(WXb_2_2);
 
-    std::println(x_1);
-    std::println(x_2);
-    std::println(x_3);
-    std::println(input_hash);
-    std::println(y_1);
-    std::println(y_2);
-    std::println(y_3);
-    std::println(output_hash);
-
-	// assert(input_hash == hash_input);
-	// assert(output_hash == hash_output);
 	assert(O_3_0.sign == y_1[0]);
 	assert(O_3_0.mantissa == y_1[1]);
 	assert(O_3_0.exponent == y_1[2]);
